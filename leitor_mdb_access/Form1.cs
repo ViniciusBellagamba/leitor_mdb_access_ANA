@@ -30,12 +30,11 @@ namespace leitor_mdb_access
 
                 return dataGridView.Rows[rowIndex].Cells[valor].Value.ToString();
             }
-            catch { return ""; }
+            catch { return null; }
         }
 
-        static string Data_max_min(string variavel, string file_path, string cod_estacao)
+        static void Data_max_min(string variavel, string file_path, string cod_estacao, DateTimePicker data_inicio, DateTimePicker data_fim)
         {
-            string datas = " ; ";
             string myConnectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;" +
                                        $@"Data Source={file_path};";
             OleDbConnection myConnection = new OleDbConnection();
@@ -53,15 +52,22 @@ namespace leitor_mdb_access
                 {
                     DateTime dt_inicio = DateTime.ParseExact(reader[0].ToString(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
                     DateTime dt_fim = DateTime.ParseExact(reader[1].ToString(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                    datas = $"{dt_inicio.ToString("dd/MM/yyyy")};{dt_fim.ToString("dd/MM/yyyy")}";
+                    data_inicio.CustomFormat = "dd/MM/yyyy";
+                    data_inicio.Format = DateTimePickerFormat.Custom;
+                    data_fim.CustomFormat = "dd/MM/yyyy";
+                    data_fim.Format = DateTimePickerFormat.Custom;
+                    data_inicio.Value = dt_inicio;
+                    data_fim.Value = dt_fim;
                 }
                 myConnection.Close();
-                return datas;
             }
             catch
             {
                 myConnection.Close();
-                return datas;
+                data_inicio.CustomFormat = " ";
+                data_inicio.Format = DateTimePickerFormat.Custom;
+                data_fim.CustomFormat = " ";
+                data_fim.Format = DateTimePickerFormat.Custom;
             }
         }
        
@@ -73,10 +79,15 @@ namespace leitor_mdb_access
         private void Form1_Load(object sender, EventArgs e)
         {
             this.comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
+            dtPicker_inicio.CustomFormat = " ";
+            dtPicker_inicio.Format = DateTimePickerFormat.Custom;
+            dtPicker_fim.CustomFormat = " ";
+            dtPicker_fim.Format = DateTimePickerFormat.Custom;
             btn_gerar.Enabled = false;
+            dataGridView_estacao.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Btn_buscar_Click(object sender, EventArgs e)
         {
             var FD = new OpenFileDialog();
             if (FD.ShowDialog() ==DialogResult.OK)
@@ -102,13 +113,15 @@ namespace leitor_mdb_access
                     DataTable tabela = new DataTable();
                     tabela.Clear();
 
-                    OleDbDataAdapter ad = new OleDbDataAdapter();
-                    ad.SelectCommand = cmd;
-                    ad.Fill(tabela);
+                    OleDbDataAdapter ad = new OleDbDataAdapter() {
+                        SelectCommand = cmd
+                    };
 
+                    ad.Fill(tabela);
                     dataGridView_estacao.DataSource = tabela;
                     btn_gerar.Enabled = true;
                     myConnection.Close();
+
                 }
                 catch
                 {
@@ -119,14 +132,11 @@ namespace leitor_mdb_access
             }
         }
 
-        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        private void Radio_Vazao_CheckedChanged(object sender, EventArgs e)
         {
             if (Radio_Vazao.Checked == true)
             {
-                string datas = Data_max_min("Vazoes", textBox_mdb.Text, textBox_codEstacao.Text);
-                var data = datas.Split(';');
-                textBox_dataInicio.Text = data[0];
-                textBox_dataFim.Text = data[1];
+                Data_max_min("Vazoes", textBox_mdb.Text, textBox_codEstacao.Text, dtPicker_inicio, dtPicker_fim);
                 tabela = "Vazoes";
             }
         }
@@ -135,10 +145,7 @@ namespace leitor_mdb_access
         {
             if (Radio_Nivel.Checked == true)
             {
-                string datas = Data_max_min("Cotas", textBox_mdb.Text, textBox_codEstacao.Text);
-                var data = datas.Split(';');
-                textBox_dataInicio.Text = data[0];
-                textBox_dataFim.Text = data[1];
+                Data_max_min("Cotas", textBox_mdb.Text, textBox_codEstacao.Text, dtPicker_inicio, dtPicker_fim);
                 tabela = "Cotas";
             }
         }
@@ -147,23 +154,20 @@ namespace leitor_mdb_access
         {
             if (Radio_Chuva.Checked == true)
             {
-                string datas = Data_max_min("Chuvas", textBox_mdb.Text, textBox_codEstacao.Text);
-                var data = datas.Split(';');
-                textBox_dataInicio.Text = data[0];
-                textBox_dataFim.Text = data[1];
+                Data_max_min("Chuvas", textBox_mdb.Text, textBox_codEstacao.Text, dtPicker_inicio, dtPicker_fim);
                 tabela = "Chuvas";
             }
         }
 
-        private void btn_gerar_Click(object sender, EventArgs e)
+        private void Btn_gerar_Click(object sender, EventArgs e)
         {
-            string estacao = Dt_search("Nome" ,textBox_codEstacao, dataGridView_estacao);
+            string estacao = Dt_search("Nome", textBox_codEstacao, dataGridView_estacao);
 
             string selected = comboBox1.GetItemText(this.comboBox1.SelectedItem);
             string option = selected;
 
-            string dataInicio = textBox_dataInicio.Text;
-            string dataFim = textBox_dataFim.Text;
+            string dataInicio = dtPicker_inicio.Text;
+            string dataFim = dtPicker_fim.Text;
             string codEstacao = textBox_codEstacao.Text;
             List<Medidas> lista_consistida;
             List<Medidas> lista_bruta;
@@ -199,12 +203,9 @@ namespace leitor_mdb_access
             writer.Close();
         }
 
-        private void textBox_codEstacao_TextChanged(object sender, EventArgs e)
+        private void TextBox_codEstacao_TextChanged(object sender, EventArgs e)
         {
-            string datas = Data_max_min(tabela, textBox_mdb.Text, textBox_codEstacao.Text);
-            var data = datas.Split(';');
-            textBox_dataInicio.Text = data[0];
-            textBox_dataFim.Text = data[1];
+            Data_max_min(tabela, textBox_mdb.Text, textBox_codEstacao.Text, dtPicker_inicio, dtPicker_fim);
 
             string tipo = Dt_search("TipoEstacao", textBox_codEstacao, dataGridView_estacao);
 
@@ -229,7 +230,7 @@ namespace leitor_mdb_access
             }
         }
 
-        private void dataGridView_estacao_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView_estacao_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             textBox_codEstacao.Text = dataGridView_estacao.CurrentCell.Value.ToString();
         }
