@@ -76,9 +76,9 @@ namespace leitor_mdb_access
 
             string myConnectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;" +
                                        $@"Data Source={Form1.file_path};";
+            OleDbConnection myConnection = new OleDbConnection();
             try
             {
-                OleDbConnection myConnection = new OleDbConnection();
                 myConnection.ConnectionString = myConnectionString;
                 myConnection.Open();
                 OleDbCommand cmd = myConnection.CreateCommand();
@@ -100,6 +100,7 @@ namespace leitor_mdb_access
                         cmd.CommandText = $"select * from {tabela} where Data between #{data_inicio}# AND #{data_fim}# AND NivelConsistencia = {NivelConsistencia} AND MediaDiaria = 1 AND EstacaoCodigo = {cod_estacao}";
                         break;
                 }
+
                 OleDbDataReader reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
@@ -116,9 +117,9 @@ namespace leitor_mdb_access
                 }
                 myConnection.Close();
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine("OLEDB Connection FAILED: " + ex.Message);
+                myConnection.Close();
             }
             lista.Sort((x, y) => DateTime.Compare(x.dt, y.dt));
             return lista;

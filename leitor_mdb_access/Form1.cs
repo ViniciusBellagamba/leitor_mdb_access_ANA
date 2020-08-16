@@ -13,14 +13,34 @@ namespace leitor_mdb_access
         private string tabela;
         public static string file_path;
 
-        public static string data_max_min(string variavel, string file_path, string cod_estacao)
+        static string Dt_search(string valor,TextBox textBox, DataGridView dataGridView)
+        {
+            try
+            {
+                String searchValue = textBox.Text;
+                int rowIndex = -1;
+                foreach (DataGridViewRow row in dataGridView.Rows)
+                {
+                    if (row.Cells[1].Value.ToString().Equals(searchValue))
+                    {
+                        rowIndex = row.Index;
+                        break;
+                    }
+                }
+
+                return dataGridView.Rows[rowIndex].Cells[valor].Value.ToString();
+            }
+            catch { return ""; }
+        }
+
+        static string Data_max_min(string variavel, string file_path, string cod_estacao)
         {
             string datas = " ; ";
             string myConnectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;" +
                                        $@"Data Source={file_path};";
+            OleDbConnection myConnection = new OleDbConnection();
             try
             {
-                OleDbConnection myConnection = new OleDbConnection();
                 myConnection.ConnectionString = myConnectionString;
                 myConnection.Open();
 
@@ -38,14 +58,13 @@ namespace leitor_mdb_access
                 myConnection.Close();
                 return datas;
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine("OLEDB Connection FAILED: " + ex.Message);
+                myConnection.Close();
                 return datas;
             }
         }
        
-
         public Form1()
         {
             InitializeComponent();
@@ -54,6 +73,7 @@ namespace leitor_mdb_access
         private void Form1_Load(object sender, EventArgs e)
         {
             this.comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
+            btn_gerar.Enabled = false;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -69,17 +89,15 @@ namespace leitor_mdb_access
                 file_path = textBox_mdb.Text;
                 string myConnectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;" +
                                            $@"Data Source={file_path};";
+                OleDbConnection myConnection = new OleDbConnection();
                 try
                 {
-                    OleDbConnection myConnection = new OleDbConnection();
                     myConnection.ConnectionString = myConnectionString;
                     myConnection.Open();
 
                     OleDbCommand cmd = myConnection.CreateCommand();
                     cmd.Connection = myConnection;
                     cmd.CommandText = $"select TipoEstacao, Codigo, Nome from Estacao";
-
-                    myConnection.Close();
 
                     DataTable tabela = new DataTable();
                     tabela.Clear();
@@ -89,11 +107,14 @@ namespace leitor_mdb_access
                     ad.Fill(tabela);
 
                     dataGridView_estacao.DataSource = tabela;
-
+                    btn_gerar.Enabled = true;
+                    myConnection.Close();
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.WriteLine("OLEDB Connection FAILED: " + ex.Message);
+                    myConnection.Close();
+                    btn_gerar.Enabled = false;
+                    dataGridView_estacao.DataSource = null;
                 }
             }
         }
@@ -102,7 +123,7 @@ namespace leitor_mdb_access
         {
             if (Radio_Vazao.Checked == true)
             {
-                string datas = data_max_min("Vazoes", textBox_mdb.Text, textBox_codEstacao.Text);
+                string datas = Data_max_min("Vazoes", textBox_mdb.Text, textBox_codEstacao.Text);
                 var data = datas.Split(';');
                 textBox_dataInicio.Text = data[0];
                 textBox_dataFim.Text = data[1];
@@ -114,7 +135,7 @@ namespace leitor_mdb_access
         {
             if (Radio_Nivel.Checked == true)
             {
-                string datas = data_max_min("Cotas", textBox_mdb.Text, textBox_codEstacao.Text);
+                string datas = Data_max_min("Cotas", textBox_mdb.Text, textBox_codEstacao.Text);
                 var data = datas.Split(';');
                 textBox_dataInicio.Text = data[0];
                 textBox_dataFim.Text = data[1];
@@ -126,7 +147,7 @@ namespace leitor_mdb_access
         {
             if (Radio_Chuva.Checked == true)
             {
-                string datas = data_max_min("Chuvas", textBox_mdb.Text, textBox_codEstacao.Text);
+                string datas = Data_max_min("Chuvas", textBox_mdb.Text, textBox_codEstacao.Text);
                 var data = datas.Split(';');
                 textBox_dataInicio.Text = data[0];
                 textBox_dataFim.Text = data[1];
@@ -134,30 +155,9 @@ namespace leitor_mdb_access
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void btn_gerar_Click(object sender, EventArgs e)
         {
-            string estacao;
-            try
-            {
-                String searchValue = textBox_codEstacao.Text;
-                int rowIndex = -1;
-                foreach (DataGridViewRow row in dataGridView_estacao.Rows)
-                {
-                    if (row.Cells[1].Value.ToString().Equals(searchValue))
-                    {
-                        rowIndex = row.Index;
-                        break;
-                    }
-                }
-
-                estacao = dataGridView_estacao.Rows[rowIndex].Cells[2].Value.ToString();
-            }
-            catch { estacao = ""; }
+            string estacao = Dt_search("Nome" ,textBox_codEstacao, dataGridView_estacao);
 
             string selected = comboBox1.GetItemText(this.comboBox1.SelectedItem);
             string option = selected;
@@ -201,13 +201,35 @@ namespace leitor_mdb_access
 
         private void textBox_codEstacao_TextChanged(object sender, EventArgs e)
         {
-            string datas = data_max_min(tabela, textBox_mdb.Text, textBox_codEstacao.Text);
+            string datas = Data_max_min(tabela, textBox_mdb.Text, textBox_codEstacao.Text);
             var data = datas.Split(';');
             textBox_dataInicio.Text = data[0];
             textBox_dataFim.Text = data[1];
+
+            string tipo = Dt_search("TipoEstacao", textBox_codEstacao, dataGridView_estacao);
+
+            switch(tipo)
+            {
+                case "1":
+                    Radio_Nivel.Enabled = true;
+                    Radio_Vazao.Enabled = true;
+                    Radio_Chuva.Enabled = false;
+                    Radio_Chuva.Checked = false;
+                    if (Radio_Nivel.Checked == false && Radio_Vazao.Checked == false)
+                        Radio_Nivel.Checked = true;
+                    break;
+                case "2":
+                    Radio_Nivel.Enabled = false;
+                    Radio_Vazao.Enabled = false;
+                    Radio_Chuva.Enabled = true;
+                    Radio_Nivel.Checked = false;
+                    Radio_Vazao.Checked = false;
+                    Radio_Chuva.Checked = true;
+                    break;
+            }
         }
 
-        private void dataGridView_estacao_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void dataGridView_estacao_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             textBox_codEstacao.Text = dataGridView_estacao.CurrentCell.Value.ToString();
         }
