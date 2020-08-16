@@ -76,9 +76,10 @@
             this.dataGridView_estacao.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView_estacao.Location = new System.Drawing.Point(12, 59);
             this.dataGridView_estacao.Name = "dataGridView_estacao";
+            this.dataGridView_estacao.ReadOnly = true;
             this.dataGridView_estacao.Size = new System.Drawing.Size(424, 131);
             this.dataGridView_estacao.TabIndex = 2;
-            this.dataGridView_estacao.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_estacao_CellContentClick);
+            this.dataGridView_estacao.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_estacao_CellClick);
             // 
             // Radio_Chuva
             // 
@@ -135,7 +136,6 @@
             this.label1.Size = new System.Drawing.Size(60, 13);
             this.label1.TabIndex = 6;
             this.label1.Text = "Data Início";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // label2
             // 
