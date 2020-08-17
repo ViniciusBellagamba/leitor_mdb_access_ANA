@@ -21,30 +21,6 @@ namespace leitor_mdb_access
 
         public static List<Medidas> Adjust_List(List<Medidas> lista)
         {
-            List<DateTime> temp = new List<DateTime>();
-            int contador = 1;
-            foreach (var x in lista.Skip(1))
-            {
-                if ((x.dt - lista[contador - 1].dt).TotalDays > 1)
-                {
-                    var datas = Enumerable.Range(1, -1 + x.dt.Subtract(lista[contador - 1].dt).Days)
-                        .Select(offset => lista[contador - 1].dt.AddDays(offset))
-                        .ToArray();
-
-                    foreach (var data in datas)
-                    {
-                        temp.Add(data);
-                    }
-
-                }
-                contador++;
-            }
-
-            foreach (var x in temp)
-            {
-                lista.Add(new Medidas(x, "", ""));
-            }
-
             lista.Sort((x, y) => DateTime.Compare(x.dt, y.dt));
             return lista;
         }
@@ -104,15 +80,14 @@ namespace leitor_mdb_access
                 OleDbDataReader reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    for (int i = 1; i <= 31; i++)
+                    DateTime dt = DateTime.ParseExact(reader["Data"].ToString(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                    int days = DateTime.DaysInMonth(dt.Year, dt.Month);
+                    for (int i = 1; i <= days; i++)
                     {
                         string index = variavel + i.ToString("00");
-                        if (reader[index] != DBNull.Value)
-                        {
-                            DateTime dt = DateTime.ParseExact(reader["Data"].ToString(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                            dt = dt.AddDays(i - 1);
-                            lista.Add(new Medidas(dt, reader["NivelConsistencia"].ToString(), reader[index].ToString()));
-                        }
+                        dt = DateTime.ParseExact(reader["Data"].ToString(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                        dt = dt.AddDays(i - 1);
+                        lista.Add(new Medidas(dt, reader["NivelConsistencia"].ToString(), reader[index].ToString()));
                     }
                 }
                 myConnection.Close();

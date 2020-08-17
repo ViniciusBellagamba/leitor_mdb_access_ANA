@@ -163,18 +163,23 @@ namespace leitor_mdb_access
         private void Btn_gerar_Click(object sender, EventArgs e)
         {
             string estacao = Dt_search("Nome", textBox_codEstacao, dataGridView_estacao);
-
             string selected = comboBox1.GetItemText(this.comboBox1.SelectedItem);
             string option = selected;
-
             string dataInicio = dtPicker_inicio.Text;
             string dataFim = dtPicker_fim.Text;
             string codEstacao = textBox_codEstacao.Text;
             List<Medidas> lista_consistida;
             List<Medidas> lista_bruta;
+            string fileName;
 
-            StreamWriter writer = new StreamWriter($"{estacao}_{codEstacao}_{tabela}.csv");
+            if (option == "Ambos")
+                fileName = $"{estacao}_{codEstacao}_{tabela}.csv";
+            else
+                fileName = $"{estacao}_{codEstacao}_{tabela}_{option}.csv";
+
+            StreamWriter writer = new StreamWriter(fileName);
             writer.WriteLine("Data;{0};NC", tabela);
+
             switch (option)
             {
                 case "Bruto":
