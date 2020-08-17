@@ -79,7 +79,7 @@
             this.dataGridView_estacao.ReadOnly = true;
             this.dataGridView_estacao.Size = new System.Drawing.Size(424, 131);
             this.dataGridView_estacao.TabIndex = 2;
-            this.dataGridView_estacao.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridView_estacao_CellClick);
+            this.dataGridView_estacao.SelectionChanged += new System.EventHandler(this.DataGridView_estacao_SelectionChanged);
             // 
             // Radio_Chuva
             // 
@@ -178,6 +178,7 @@
             // 
             // textBox_codEstacao
             // 
+            this.textBox_codEstacao.Enabled = false;
             this.textBox_codEstacao.Location = new System.Drawing.Point(232, 210);
             this.textBox_codEstacao.Name = "textBox_codEstacao";
             this.textBox_codEstacao.Size = new System.Drawing.Size(204, 20);

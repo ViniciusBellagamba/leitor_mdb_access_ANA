@@ -85,6 +85,7 @@ namespace leitor_mdb_access
             dtPicker_fim.Format = DateTimePickerFormat.Custom;
             btn_gerar.Enabled = false;
             dataGridView_estacao.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            dataGridView_estacao.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         }
 
         private void Btn_buscar_Click(object sender, EventArgs e)
@@ -230,9 +231,12 @@ namespace leitor_mdb_access
             }
         }
 
-        private void DataGridView_estacao_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView_estacao_SelectionChanged(object sender, EventArgs e)
         {
-            textBox_codEstacao.Text = dataGridView_estacao.CurrentCell.Value.ToString();
+            foreach (DataGridViewRow row in dataGridView_estacao.SelectedRows)
+            {
+                textBox_codEstacao.Text = row.Cells["Codigo"].Value.ToString();
+            }
         }
     }
 }
